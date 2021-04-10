@@ -1,7 +1,7 @@
 {
     "name": "npm-dep-check",
     "version": "1.0.0",
-    "description": "Find the dependencies of an npm package",
+    "description": "Find the dependencies of an NPM package",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",

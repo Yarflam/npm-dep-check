@@ -1,6 +1,6 @@
 # npm-dep-check
 
-Find the dependencies of an npm package.
+Find the dependencies of an NPM package.
 
 ## Install
 
@@ -20,7 +20,7 @@ You should use it as follows:
 npm-dep-check /path/of/your-node-project name-of-package
 ```
 
-Note: the project must have the files `package.json` and `package-lock.json`.
+Note: the project must have the files `package.json` and `package-lock.json` (or `yarn.lock`).
 
 **Example**
 
@@ -31,6 +31,7 @@ npm-dep-check . netmask
 Output:
 
 ```text
+[package-lock.json]
 Analysis among 3762 dependencies (184 modules).
 Used by 1 direct dependency:
 - node-mailjet [v3.3.1]
@@ -42,6 +43,11 @@ Used by 4 indirect dependencies:
 
 Module netmask v1.0.6
 ```
+
+## Versions
+
+-   **v1.0.1**: Yarn Support
+-   **v1.0.0**: First version
 
 ## Author
 

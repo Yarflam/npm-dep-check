@@ -15,19 +15,57 @@ const name = process.argv.slice(-1)[0];
     if (target && name) {
         const pckPath = path.resolve(target, 'package.json');
         const pckLockPath = path.resolve(target, 'package-lock.json');
-        if (fs.existsSync(pckPath) && fs.existsSync(pckLockPath)) {
+        const yarnLockPath = path.resolve(target, 'yarn.lock');
+        if (
+            fs.existsSync(pckPath) &&
+            (fs.existsSync(pckLockPath) || fs.existsSync(yarnLockPath))
+        ) {
             /* Read package.json */
             const deps = require(pckPath).dependencies || {};
             const depsKeys = Object.keys(deps);
             if (depsKeys.indexOf(name) >= 0) {
                 console.log(
-                    'The module has been installed for the project (found in the package.json file).'
+                    'The module has been installed for the project (found in the package.json file).\n'
                 );
             }
 
-            /* Read package-lock.json */
+            /* Read package-lock.json or yarn.lock */
+            let rdps;
+            if (fs.existsSync(pckLockPath)) {
+                console.log('[package-lock.json]');
+                /* Import package-lock.json */
+                rdps = require(pckLockPath).dependencies || {};
+            } else {
+                console.log('[yarn.lock]');
+                /* Import yarn.lock (Yaml format) */
+                rdps = fs.readFileSync(yarnLockPath, 'utf8');
+                /* Clean up */
+                rdps = rdps
+                    .replace(/\x0A/g, '\n')
+                    .replace(/(^|\n)#[^\n]*/g, '$1')
+                    .replace(/\n+/g, '\n')
+                    .replace(/(^\n|\n$)/g, '')
+                    .replace(/\n {2}(?!dependencies|[^a-z])[^\n]+/g, '')
+                    .replace(/(^|\n)"?([^",:\n ]+)"?[^\n]+/g, '$1$2');
+                /* Convert to JSON format */
+                rdps = JSON.parse(
+                    `{${rdps
+                        .replace(
+                            /(^|\n)(@?[^@ ]+)@([^\n]+)/g,
+                            '$1"$2":{"version":"$3",'
+                        )
+                        .replace(/\n {2}dependencies:/g, '"requires":{')
+                        .replace(
+                            /\n {4}"?([^" ]+)"? "?([^"\n]+)"?/g,
+                            '"$1":"$2",'
+                        )
+                        .replace(/("requires":\{[^\n]+),(\n|$)/g, '$1},$2')
+                        .replace(/,(\n|$)/g, '},')
+                        .replace(/,$/, '')}}`
+                );
+            }
+            /* Indexing */
             let ndps = [];
-            let rdps = require(pckLockPath).dependencies || {};
             for (let rdpsName in rdps) {
                 if (typeof rdps[rdpsName].requires !== 'undefined') {
                     ndps = ndps.concat(
@@ -132,6 +170,12 @@ const name = process.argv.slice(-1)[0];
                         ''
                     ).replace('^', '')}`
                 );
+            }
+        } else {
+            if (!fs.existsSync(pckPath)) {
+                console.log('This is not an NPM project.');
+            } else {
+                console.log('Please install the node_modules.');
             }
         }
     }
