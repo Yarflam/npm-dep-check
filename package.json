@@ -1,11 +1,11 @@
 {
     "name": "npm-dep-check",
-    "version": "1.0.1",
-    "description": "Find the dependencies of an NPM package",
+    "version": "2.0.0",
+    "description": "Find the dependencies of an NPM package - discover which modules depend on a specific package",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "node test.js"
     },
     "repository": {
         "type": "git",
@@ -14,7 +14,10 @@
     "keywords": [
         "npm",
         "checking",
-        "dependencies"
+        "dependencies",
+        "dependency-tree",
+        "package-analysis",
+        "lockfile"
     ],
     "author": "Yarflam",
     "license": "ISC",
@@ -24,5 +27,12 @@
     "homepage": "https://github.com/Yarflam/npm-dep-check#readme",
     "bin": {
         "npm-dep-check": "./index.js"
-    }
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "files": [
+        "index.js",
+        "README.md"
+    ]
 }

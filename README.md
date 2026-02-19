@@ -1,6 +1,6 @@
 # npm-dep-check
 
-Find the dependencies of an NPM package.
+Find which packages depend on a specific module in your project.
 
 ## Install
 
@@ -10,49 +10,76 @@ This script is intended to work as a global package:
 npm i -g npm-dep-check
 ```
 
-The module doesn't use any dependencies to work.
+The module doesn't use any external dependencies.
 
 ## Usage
 
-You should use it as follows:
-
 ```bash
-npm-dep-check /path/of/your-node-project name-of-package
+npm-dep-check <project-path> <module-name>
 ```
 
-Note: the project must have the files `package.json` and `package-lock.json` (or `yarn.lock`).
+**Options:**
 
-**Example**
+- `--help`, `-h` — Show help
+- `--version`, `-v` — Show version
+
+**Example:**
 
 ```bash
-npm-dep-check . netmask
+npm-dep-check . lodash
 ```
 
 Output:
 
-```text
-[package-lock.json]
-Analysis among 3762 dependencies (184 modules).
-Used by 1 direct dependency:
-- node-mailjet [v3.3.1]
-Used by 4 indirect dependencies:
-- pac-proxy-agent [v2.0.2]
-- pac-resolver [v3.0.0]
-- proxy-agent [v2.3.1]
-- superagent-proxy [v1.0.3]
-
-Module netmask v1.0.6
 ```
+The module is a direct dependency (found in package.json).
+
+[package-lock.json v3]
+Analysis among 1297 dependency relations (2 direct modules).
+
+✓ Module lodash v4.17.23
+```
+
+**Finding indirect dependencies:**
+
+```bash
+npm-dep-check . debug
+```
+
+Output:
+
+```
+[package-lock.json v3]
+Analysis among 1297 dependency relations (2 direct modules).
+
+Used by 1 direct dependency:
+  - express [v5.2.1]
+
+Used by 5 indirect dependencies:
+  - body-parser [v2.2.2]
+  - finalhandler [v2.1.1]
+  - router [v2.2.0]
+  - send [v1.2.1]
+  - serve-static [v2.2.1]
+
+✓ Module debug v4.4.3
+```
+
+## Supported Lockfiles
+
+- `package-lock.json` v1, v2, v3 (npm 6, 7, 8+)
+- `yarn.lock` (Yarn classic)
 
 ## Versions
 
--   **v1.0.1**: Yarn Support
--   **v1.0.0**: First version
+- **v2.0.0**: Support for package-lock.json v2/v3, improved CLI with --help/--version, better error handling
+- **v1.0.1**: Yarn support
+- **v1.0.0**: First version
 
 ## Author
 
--   Yarflam - _initial worker_
+- Yarflam — _initial work_
 
-## Licence
+## License
 
-Free / Open Source / Peace & Love <3
+ISC — Free / Open Source / Peace & Love <3
