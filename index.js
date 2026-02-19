@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const NDC_SEP = '|';
-const VERSION = '2.0.4';
+const VERSION = '2.0.5';
 
 /* Parse arguments */
 const args = process.argv.slice(2);
@@ -188,8 +188,8 @@ function parseYarnLock(content) {
                 versions[pkgName] = version;
             }
 
-            if (line.match(/^\s+dependencies:/)) {
-                // Parse dependencies block
+            // Parse all dependency types: dependencies, optionalDependencies, peerDependencies
+            if (line.match(/^\s+(dependencies|optionalDependencies|peerDependencies):/)) {
                 for (let j = i + 1; j < lines.length; j++) {
                     const depLine = lines[j];
                     if (!depLine.match(/^\s{4}/)) break;
