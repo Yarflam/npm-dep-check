@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const NDC_SEP = '|';
-const VERSION = '2.0.2';
+const VERSION = '2.0.3';
 
 /* Parse arguments */
 const args = process.argv.slice(2);
@@ -85,11 +85,19 @@ function parseLockfileV1(lockData) {
 
 /**
  * Parse package-lock.json v2/v3 format (npm 7+)
- * Structure: { packages: { "node_modules/pkg": { version, dependencies } } }
+ * Structure: { packages: { "node_modules/pkg": { version, dependencies, peerDependencies } } }
  */
 function parseLockfileV2V3(lockData) {
     const packages = lockData.packages || {};
     const ndps = [];
+
+    // First pass: collect all installed package names
+    const installedPkgs = new Set();
+    for (const pkgPath in packages) {
+        if (!pkgPath) continue;
+        const pkgName = pkgPath.replace(/^.*node_modules\//, '');
+        installedPkgs.add(pkgName);
+    }
 
     for (const pkgPath in packages) {
         // Skip root package
@@ -98,9 +106,19 @@ function parseLockfileV2V3(lockData) {
         const pkg = packages[pkgPath];
         const pkgName = pkgPath.replace(/^.*node_modules\//, '');
 
+        // Regular dependencies
         if (pkg.dependencies) {
             for (const [depName, depVersion] of Object.entries(pkg.dependencies)) {
                 ndps.push([`${pkgName}${NDC_SEP}${depName}`, depVersion]);
+            }
+        }
+
+        // Peer dependencies (only if actually installed)
+        if (pkg.peerDependencies) {
+            for (const [depName, depVersion] of Object.entries(pkg.peerDependencies)) {
+                if (installedPkgs.has(depName)) {
+                    ndps.push([`${pkgName}${NDC_SEP}${depName}`, depVersion]);
+                }
             }
         }
     }
