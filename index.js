@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const NDC_SEP = '|';
-const VERSION = '2.0.1';
+const VERSION = '2.0.2';
 
 /* Parse arguments */
 const args = process.argv.slice(2);
@@ -209,7 +209,7 @@ function parseYarnLock(content) {
 
     /* Read package.json */
     const pkg = readJson(pckPath);
-    const deps = pkg.dependencies || {};
+    const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
     const depsKeys = Object.keys(deps);
 
     if (depsKeys.includes(name)) {

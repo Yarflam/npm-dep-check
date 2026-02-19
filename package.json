@@ -1,6 +1,6 @@
 {
     "name": "npm-dep-check",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Find the dependencies of an NPM package - discover which modules depend on a specific package",
     "main": "index.js",
     "scripts": {
