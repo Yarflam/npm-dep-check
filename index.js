@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const NDC_SEP = '|';
-const VERSION = '2.0.3';
+const VERSION = '2.0.4';
 
 /* Parse arguments */
 const args = process.argv.slice(2);
@@ -259,66 +259,51 @@ function parseYarnLock(content) {
         versions = parsed.versions;
     }
 
-    /* Deep indexing - expand transitive dependencies */
-    let i = 0;
-    while (i < ndps.length) {
-        const [depChain] = ndps[i];
-        const lastDep = depChain.split(NDC_SEP).pop();
-
-        // Find dependencies of lastDep
-        const subDeps = ndps.filter(([chain]) => {
-            const parts = chain.split(NDC_SEP);
-            return parts[0] === lastDep && parts.length === 2;
-        });
-
-        for (const [subChain] of subDeps) {
-            const subDep = subChain.split(NDC_SEP)[1];
-            const newChain = `${depChain}${NDC_SEP}${subDep}`;
-            if (!ndps.some(([c]) => c === newChain)) {
-                ndps.push([newChain, '']);
+    /* Build reverse dependency index: depIndex[pkg] = [packages that depend on pkg] */
+    const depIndex = {};
+    for (const [chain] of ndps) {
+        const parts = chain.split(NDC_SEP);
+        if (parts.length === 2) {
+            const [parent, child] = parts;
+            if (!depIndex[child]) depIndex[child] = [];
+            if (!depIndex[child].includes(parent)) {
+                depIndex[child].push(parent);
             }
         }
-        i++;
     }
 
-    /* Clean up - only keep chain keys */
-    const ndpsKeys = ndps.map(([key]) => key);
-
     /* Search functions */
-    const search = (moduleName) => {
-        return ndpsKeys
-            .map((k) => k.split(NDC_SEP))
-            .filter((k) => k.includes(moduleName) && k.indexOf(moduleName) > 0)
-            .map((k) => k[0]);
-    };
-
     const searchRoot = (moduleName) => {
-        const out = [];
+        const out = [];           // Direct dependencies that use the module
+        const indirect = [];      // Indirect dependencies in the chain
+        const visited = new Set();
         const stack = [moduleName];
-        let i = 0;
 
-        while (i < stack.length) {
-            const parents = search(stack[i]);
-            for (const m of parents) {
-                if (depsKeys.includes(m)) {
-                    if (!out.includes(m)) out.push(m);
+        while (stack.length > 0) {
+            const current = stack.pop();
+            if (visited.has(current)) continue;
+            visited.add(current);
+
+            const parents = depIndex[current] || [];
+            for (const parent of parents) {
+                if (depsKeys.includes(parent)) {
+                    if (!out.includes(parent)) out.push(parent);
                 } else {
-                    if (!stack.includes(m)) stack.push(m);
+                    if (!indirect.includes(parent)) indirect.push(parent);
+                    stack.push(parent);
                 }
             }
-            i++;
         }
 
-        stack.shift(); // Remove initial module
         return {
             main: out.sort(),
-            depends: [...new Set(stack)].sort()
+            depends: indirect.sort()
         };
     };
 
     /* Show results */
     console.log(
-        `Analysis among ${ndpsKeys.length} dependency relations (${depsKeys.length} direct modules).`
+        `Analysis among ${ndps.length} dependency relations (${depsKeys.length} direct modules).`
     );
 
     const results = searchRoot(name);
