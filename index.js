@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const NDC_SEP = '|';
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 
 /* Parse arguments */
 const args = process.argv.slice(2);
@@ -326,9 +326,21 @@ function parseYarnLock(content) {
     }
 
     /* Module info */
-    if (!results.main.length && !results.depends.length && !depsKeys.includes(name)) {
-        console.log(`\nModule "${name}" was not found in this project.`);
-        process.exit(0);
+    const isDirectDep = depsKeys.includes(name);
+    const isInstalled = name in versions;
+
+    if (!results.main.length && !results.depends.length) {
+        if (!isDirectDep && !isInstalled) {
+            console.log(`\nModule "${name}" was not found in this project.`);
+            process.exit(0);
+        }
+
+        // Module exists but nothing depends on it (it's a leaf or root dep)
+        if (isDirectDep) {
+            console.log(`\nNo other modules depend on "${name}" (it's a direct dependency).`);
+        } else {
+            console.log(`\nNo other modules depend on "${name}" in the dependency tree.`);
+        }
     }
 
     const moduleVersion = deps[name]?.replace(/^\^|~/, '') || versions[name] || 'unknown';
